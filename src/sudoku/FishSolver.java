@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008  Bernhard Hobiger
+ * Copyright (C) 2008/09  Bernhard Hobiger
  *
  * This file is part of HoDoKu.
  *
@@ -243,6 +243,8 @@ public class FishSolver extends AbstractSolver {
                 result = getAnyFish(size, allUnits, allUnits, false, true, false, true);
                 break;
             case KRAKEN_FISH:
+            case KRAKEN_FISH_TYPE_1:
+            case KRAKEN_FISH_TYPE_2:
                 result = getKrakenFish();
                 break;
         }
@@ -297,6 +299,8 @@ public class FishSolver extends AbstractSolver {
             case FINNED_MUTANT_WHALE:
             case FINNED_MUTANT_LEVIATHAN:
             case KRAKEN_FISH:
+            case KRAKEN_FISH_TYPE_1:
+            case KRAKEN_FISH_TYPE_2:
                 for (Candidate cand : step.getCandidatesToDelete()) {
                     sudoku.delCandidate(cand.getIndex(), candType, cand.getValue());
                 }
@@ -357,6 +361,7 @@ public class FishSolver extends AbstractSolver {
         Logger.getLogger(getClass().getName()).log(Level.FINER, tmpBuffer.toString());
         List<SolutionStep> result = steps;
         if (result != null) {
+            findSiameseFish(result);
             Collections.sort(result);
         }
         steps = oldSteps;
@@ -392,6 +397,7 @@ public class FishSolver extends AbstractSolver {
             }
         }
         if (steps.size() > 0) {
+            findSiameseFish(steps);
             Collections.sort(steps);
             return steps.get(0);
         }
@@ -453,6 +459,7 @@ public class FishSolver extends AbstractSolver {
         Logger.getLogger(getClass().getName()).log(Level.FINER, tmpBuffer.toString());
         List<SolutionStep> result = steps;
         if (result != null) {
+            findSiameseFish(result);
             Collections.sort(result);
         }
         steps = oldSteps;
@@ -520,6 +527,7 @@ public class FishSolver extends AbstractSolver {
         Options.getInstance().maxFins = oldMaxFins;
         Options.getInstance().maxEndoFins = oldEndoFins;
         if (steps.size() > 0) {
+            findSiameseFish(steps);
             Collections.sort(steps);
             return steps.get(0);
         }
@@ -554,11 +562,11 @@ public class FishSolver extends AbstractSolver {
                 return steps;
             }
         }
-        deletesMap.clear();
         for (int i = 0; i < cInt.length; i++) {
             cInt[i] = SudokuSet.EMPTY_SET;
         }
 
+        deletesMap.clear();
         this.baseUnits = baseUnits;
         this.coverUnits = coverUnits;
         this.candidate = candidate;
@@ -771,7 +779,8 @@ public class FishSolver extends AbstractSolver {
                                 baseUnitsIncluded, coverUnitsIncluded, false, false, fins, endoFinSet,
                                 candidatesToDelete, cannibalistic);
                         try {
-                            steps.add((SolutionStep) globalStep.clone());
+                            addFishStep();
+                            //steps.add((SolutionStep) globalStep.clone());
                         } catch (CloneNotSupportedException ex) {
                             Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Error while cloning", ex);
                         }
@@ -842,7 +851,8 @@ public class FishSolver extends AbstractSolver {
                                     baseUnitsIncluded, coverUnitsIncluded, withFins, isSashimi, fins, endoFinSet,
                                     candidatesToDelete, cannibalistic);
                             try {
-                                steps.add((SolutionStep) globalStep.clone());
+                                addFishStep();
+                                //steps.add((SolutionStep) globalStep.clone());
                             } catch (CloneNotSupportedException ex) {
                                 Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Error while cloning", ex);
                             }
@@ -871,7 +881,7 @@ public class FishSolver extends AbstractSolver {
                                             baseUnitsIncluded, coverUnitsIncluded, withFins, isSashimi, fins, endoFinSet,
                                             candidatesToDelete, cannibalistic);
                                     globalStep.setSubType(globalStep.getType());
-                                    globalStep.setType(SolutionType.KRAKEN_FISH);
+                                    globalStep.setType(SolutionType.KRAKEN_FISH_TYPE_1);
                                     globalStep.addCandidateToDelete(deleteCandSet.get(j), candidate);
                                     try {
                                         // now the chains
@@ -913,7 +923,7 @@ public class FishSolver extends AbstractSolver {
                                                 baseUnitsIncluded, coverUnitsIncluded, withFins, isSashimi, fins, endoFinSet,
                                                 candidatesToDelete, cannibalistic);
                                         globalStep.setSubType(globalStep.getType());
-                                        globalStep.setType(SolutionType.KRAKEN_FISH);
+                                        globalStep.setType(SolutionType.KRAKEN_FISH_TYPE_2);
                                         globalStep.addCandidateToDelete(endIndex, endCandidate);
                                         try {
                                             // now the chains
@@ -942,6 +952,32 @@ public class FishSolver extends AbstractSolver {
         }
     }
 
+    private void addFishStep() throws CloneNotSupportedException {
+        if (Options.getInstance().onlyOneFishPerStep) {
+            //String del = globalStep.getCandidateString() + " " + globalStep.getValues().get(0);
+            String delOrg = globalStep.getCandidateString();
+            int startIndex = delOrg.indexOf(")");
+            startIndex = delOrg.indexOf("(", startIndex);
+            String del = delOrg.substring(0, startIndex);
+            Integer oldIndex = deletesMap.get(del);
+            SolutionStep tmpStep = null;
+            if (oldIndex != null) {
+                tmpStep = steps.get(oldIndex.intValue());
+            }
+            if (tmpStep == null || globalStep.getType().compare(tmpStep.getType()) < 0) {
+                if (oldIndex != null) {
+                    steps.remove(oldIndex.intValue());
+                    steps.add(oldIndex.intValue(), (SolutionStep) globalStep.clone());
+                } else {
+                    steps.add((SolutionStep) globalStep.clone());
+                    deletesMap.put(del, steps.size() - 1);
+                }
+            }
+        } else {
+            steps.add((SolutionStep) globalStep.clone());
+        }
+    }
+    
     private void addKrakenStep() throws CloneNotSupportedException {
         String del = globalStep.getCandidateString() + " " + globalStep.getValues().get(0);
         Integer oldIndex = deletesMap.get(del);
@@ -957,6 +993,78 @@ public class FishSolver extends AbstractSolver {
 //            }
             steps.add((SolutionStep) globalStep.clone());
             deletesMap.put(del, steps.size() - 1);
+        }
+    }
+    
+    /**
+     * Siamese Fish are two fishes that have the same base sets and differ
+     * only on which candidates are fins; they provide different eliminations.
+     * only fishes of the same category are checked
+     * 
+     * To find them: Compare all pairs of fishes, if the base sets match create
+     * a new steps, that contains the same base set and both cover sets/fins/
+     * eliminations.
+     * 
+     * @param fishes All available fishes
+     */
+    private void findSiameseFish(List<SolutionStep> fishes) {
+        if (! Options.getInstance().allowDualsAndSiamese) {
+            // not allowed!
+            return;
+        }
+        // read current size (list can be changed by Siamese Fishes)
+        int maxIndex = fishes.size();
+        for (int i = 0; i < maxIndex - 1; i++) {
+            for (int j = i + 1; j < maxIndex; j++) {
+                SolutionStep step1 = fishes.get(i);
+                SolutionStep step2 = fishes.get(j);
+                if (step1.getValues().get(0) != step2.getValues().get(0)) {
+                    // different candidate
+                    continue;
+                }
+                if (step1.getBaseEntities().size() != step2.getBaseEntities().size()) {
+                    // different fish size -> no dual
+                    continue;
+                }
+                if (SolutionType.getStepConfig(step1.getType()).getCategory().ordinal() !=
+                        SolutionType.getStepConfig(step2.getType()).getCategory().ordinal()) {
+                    // not the same type of fish
+                    continue;
+                }
+                boolean baseSetEqual = true;
+                for (int k = 0; k < step1.getBaseEntities().size(); k++) {
+                    if (! step1.getBaseEntities().get(k).equals(step2.getBaseEntities().get(k))) {
+                        baseSetEqual = false;
+                        break;
+                    }
+                }
+                if (! baseSetEqual) {
+                    // not the same base set -> cant be a siamese fish
+                    continue;
+                }
+                // possible siamese fish; different eliminations?
+                if (step1.getCandidatesToDelete().get(0).equals(step2.getCandidatesToDelete().get(0))) {
+                    // same step twice -> no siamese fish
+                    continue;
+                }
+                // ok: siamese fish!
+                try {
+                    SolutionStep siamese = (SolutionStep) step1.clone();
+                    siamese.setIsSiamese(true);
+                    for (int k = 0; k < step2.getCoverEntities().size(); k++) {
+                        siamese.addCoverEntity(step2.getCoverEntities().get(k));
+                    }
+                    for (int k = 0; k < step2.getFins().size(); k++) {
+                        siamese.addFin(step2.getFins().get(k));
+                    }
+                    for (int k = 0; k < step2.getCandidatesToDelete().size(); k++) {
+                        siamese.addCandidateToDelete(step2.getCandidatesToDelete().get(k));
+                    }
+                    fishes.add(siamese);
+                } catch (CloneNotSupportedException ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Error while cloning", ex);
+                }
+            }
         }
     }
     
@@ -1270,7 +1378,8 @@ public class FishSolver extends AbstractSolver {
     }
 
     public static void main(String[] args) {
-        Sudoku sudoku = new Sudoku(true);
+        //Sudoku sudoku = new Sudoku(true);
+        Sudoku sudoku = new Sudoku();
         //sudoku.setSudoku(":0361:4:..5.132673268..14917...2835..8..1.262.1.96758.6..283...12....83693184572..723.6..:434 441 442 461 961 464 974:411:r7c39 r6c1b9 fr3c3");
         //sudoku.setSudoku(":0300:4:135792..4.9.8315278725461...8.917.5....3.4.783.72.89.1...673.1....1297..7..485..6:653 472 473 277 483 683 388:481:c28 r68");
         //sudoku.setSudoku(":0000:x:7.2.34.8.........2.8..51.74.......51..63.27..29.......14.76..2.8.........2.51.8.7:::");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008  Bernhard Hobiger
+ * Copyright (C) 2008/09  Bernhard Hobiger
  *
  * This file is part of HoDoKu.
  *
@@ -126,7 +126,11 @@ public enum SolutionType {
     SIMPLE_COLORS(java.util.ResourceBundle.getBundle("intl/SolutionType").getString("Simple_Colors"), "0500", "sc"),
     MULTI_COLORS(java.util.ResourceBundle.getBundle("intl/SolutionType").getString("Multi_Colors"), "0501", "mc"),
     KRAKEN_FISH(java.util.ResourceBundle.getBundle("intl/SolutionType").getString("Kraken_Fish"), "0370", "kf"),
-    TURBOT_FISH(java.util.ResourceBundle.getBundle("intl/SolutionType").getString("Turbot_Fish"), "0403", "tf");
+    TURBOT_FISH(java.util.ResourceBundle.getBundle("intl/SolutionType").getString("Turbot_Fish"), "0403", "tf"),
+    KRAKEN_FISH_TYPE_1(java.util.ResourceBundle.getBundle("intl/SolutionType").getString("Kraken_Fish_Type_1"), "0370", "kf1"),
+    KRAKEN_FISH_TYPE_2(java.util.ResourceBundle.getBundle("intl/SolutionType").getString("Kraken_Fish_Type_2"), "0370", "kf2"),
+    DUAL_TWO_STRING_KITE(java.util.ResourceBundle.getBundle("intl/SolutionType").getString("Dual_2-String_Kite"), "0401", "d2sk"),
+    DUAL_EMPTY_RECTANGLE(java.util.ResourceBundle.getBundle("intl/SolutionType").getString("Dual_Empty_Rectangle"), "0402", "der");
     private String stepName;
     private String libraryType;
     private String argName;
@@ -244,7 +248,41 @@ public enum SolutionType {
         return getStepConfig(this);
     }
 
+    /**
+     * Don't forget SolutionTypes tat don't have StepConfigs
+     * (e.g. DISCONTINUOUS_NICE_LOOP or DUAL_TWO_STRING_KITE)
+     * 
+     * @param type The SolutionType for which the StepConfig should be retrieved
+     * @return The StepConfig appropriate for type
+     */
     public static StepConfig getStepConfig(SolutionType type) {
+        if (type == SolutionType.LOCKED_CANDIDATES_1 || type == SolutionType.LOCKED_CANDIDATES_2) {
+            type = SolutionType.LOCKED_CANDIDATES;
+        }
+        if (type == SolutionType.CONTINUOUS_NICE_LOOP || type == SolutionType.DISCONTINUOUS_NICE_LOOP ||
+                type == SolutionType.AIC) {
+            type = SolutionType.NICE_LOOP;
+        }
+        if (type == SolutionType.GROUPED_CONTINUOUS_NICE_LOOP || type == SolutionType.GROUPED_DISCONTINUOUS_NICE_LOOP ||
+                type == SolutionType.GROUPED_AIC) {
+            type = SolutionType.GROUPED_NICE_LOOP;
+        }
+        if (type == SolutionType.FORCING_CHAIN_CONTRADICTION || type == SolutionType.FORCING_CHAIN_VERITY) {
+            type = SolutionType.FORCING_CHAIN;
+        }
+        if (type == SolutionType.FORCING_NET_CONTRADICTION || type == SolutionType.FORCING_NET_VERITY) {
+            type = SolutionType.FORCING_NET;
+        }
+        if (type == SolutionType.KRAKEN_FISH_TYPE_1 || type == SolutionType.KRAKEN_FISH_TYPE_2) {
+            type = SolutionType.KRAKEN_FISH;
+        }
+        if (type == SolutionType.DUAL_TWO_STRING_KITE) {
+            type = SolutionType.TWO_STRING_KITE;
+        }
+        if (type == SolutionType.DUAL_EMPTY_RECTANGLE) {
+            type = SolutionType.EMPTY_RECTANGLE;
+        }
+
         StepConfig[] configs = Options.getInstance().solverSteps;
         for (int i = 0; i < configs.length; i++) {
             if (configs[i].getType() == type) {
@@ -274,6 +312,17 @@ public enum SolutionType {
     public boolean isFish() {
         return isFish(this);
     }
+    
+    public static boolean isKrakenFish(SolutionType type) {
+        if (type == KRAKEN_FISH || type == KRAKEN_FISH_TYPE_1 || type == KRAKEN_FISH_TYPE_2) {
+            return true;
+        }
+        return false;
+    }
+    
+    public boolean isKrakenFish() {
+        return isKrakenFish(this);
+    }
 
     public static int getNonSinglesAnz() {
         int anz = 0;
@@ -293,6 +342,15 @@ public enum SolutionType {
             }
         }
         return anz;
+    }
+    
+    public static SolutionType getTypeFromArgName(String argName) {
+        for (int i = 0; i < values().length; i++) {
+            if (argName.compareToIgnoreCase(values()[i].argName) == 0) {
+                return values()[i];
+            }
+        }
+        return null;
     }
 
     public String getLibraryType() {

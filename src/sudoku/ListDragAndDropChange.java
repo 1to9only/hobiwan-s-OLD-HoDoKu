@@ -16,18 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with HoDoKu. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package sudoku;
 
 /**
  *
- * @author Bernhard Hobiger
+ * @author zhobigbe
  */
-public enum DifficultyType {
-    INCOMPLETE,
-    EASY,
-    MEDIUM,
-    HARD,
-    UNFAIR,
-    EXTREME;
+public interface ListDragAndDropChange {
+    public void moveStep(int fromIndex, int toIndex);
+    
+    public void setDropLocation(int index, StepConfig object);
 }

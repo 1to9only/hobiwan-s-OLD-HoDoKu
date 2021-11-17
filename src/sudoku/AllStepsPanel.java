@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008  Bernhard Hobiger
+ * Copyright (C) 2008/09  Bernhard Hobiger
  *
  * This file is part of HoDoKu.
  *
@@ -255,6 +255,12 @@ private void krakenFishCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {
                 tmpSteps[i].setAllStepsEnabled(allStepsEnabled);
             }
         }
+        tmpSteps = Options.getInstance().orgSolverSteps;
+        for (int i = 0; i < tmpSteps.length; i++) {
+            if (tmpSteps[i].getType() == type) {
+                tmpSteps[i].setAllStepsEnabled(allStepsEnabled);
+            }
+        }
     }
 
     private boolean getAllStepsEnabled(SolutionType type) {
@@ -283,6 +289,7 @@ private void krakenFishCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {
     
     public void resetPanel() {
         model = new DefaultTreeModel(new DefaultMutableTreeNode(java.util.ResourceBundle.getBundle("intl/AllStepsPanel").getString("AllStepsPanel.no_solutions")));
+        steps = null;
         stepsTree.setModel(model);
         createTreeNodes();
     }
