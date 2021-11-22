@@ -77,7 +77,14 @@ public class FishSolver extends AbstractSolver {
     private static final SolutionType[] FINNED_MUTANT_TYPES = {SolutionType.FINNED_MUTANT_X_WING, SolutionType.FINNED_MUTANT_SWORDFISH, SolutionType.FINNED_MUTANT_JELLYFISH, SolutionType.FINNED_MUTANT_SQUIRMBAG, SolutionType.FINNED_MUTANT_WHALE, SolutionType.FINNED_MUTANT_LEVIATHAN};
     private static final int LINE_MASK = 0x1;
     private static final int COL_MASK = 0x2;
-    private static final int BLOCK_MASK = 0x4;    // Array mit Sets, in jedem Set stehen für die entsprechende Unit alle Indexe,
+    private static final int BLOCK_MASK = 0x4;    
+    
+    private static final int UNDEFINED = -1;
+    private static final int BASIC = 0;
+    private static final int FRANKEN = 1;
+    private static final int MUTANT = 2;
+    
+    // Array mit Sets, in jedem Set stehen für die entsprechende Unit alle Indexe,
     // an denen ein bestimmter Kandidat vorkommt
     private SudokuSet[] baseCandidates = null;
     private SudokuSet[] coverCandidates = null;    // Unit-Arrays für die aktuelle Suche
@@ -115,6 +122,7 @@ public class FishSolver extends AbstractSolver {
     private boolean sashimi; // true, wenn Sashimi-Fische gesucht werden sollen (withFins muss ebenfalls true sein)
     private boolean kraken;  // true, wenn nach Kraken Fish gesucht werden soll
     private boolean searchAll; // true, if all fishes should be found (searches for inverse in Kraken Fish)
+    private int fishType = UNDEFINED; // which type of fish should be searched for?
     private int minSize;      // minimale Anzahl Base-Units für Suche
     private int maxSize;      // maximale Anzahl Base-Units für Suche
     private int anzBaseUnits; // Anzahl der Base-Units für eine Cover-Set-Suche
@@ -158,7 +166,7 @@ public class FishSolver extends AbstractSolver {
                 size++;
             case X_WING:
                 searchAll = false;
-                result = getAnyFish(size, lineUnits, colUnits, true, false, false, false);
+                result = getAnyFish(size, lineUnits, colUnits, true, false, false, false, BASIC);
                 break;
             case FINNED_LEVIATHAN:
                 size++;
@@ -172,7 +180,7 @@ public class FishSolver extends AbstractSolver {
                 size++;
             case FINNED_X_WING:
                 searchAll = false;
-                result = getAnyFish(size, lineUnits, colUnits, false, true, false, false);
+                result = getAnyFish(size, lineUnits, colUnits, false, true, false, false, BASIC);
                 break;
             case SASHIMI_LEVIATHAN:
                 size++;
@@ -186,7 +194,7 @@ public class FishSolver extends AbstractSolver {
                 size++;
             case SASHIMI_X_WING:
                 searchAll = false;
-                result = getAnyFish(size, lineUnits, colUnits, false, true, true, false);
+                result = getAnyFish(size, lineUnits, colUnits, false, true, true, false, BASIC);
                 break;
             case FRANKEN_LEVIATHAN:
                 size++;
@@ -200,7 +208,7 @@ public class FishSolver extends AbstractSolver {
                 size++;
             case FRANKEN_X_WING:
                 searchAll = false;
-                result = getAnyFish(size, lineBlockUnits, colBlockUnits, true, false, false, true);
+                result = getAnyFish(size, lineBlockUnits, colBlockUnits, true, false, false, true, FRANKEN);
                 break;
             case FINNED_FRANKEN_LEVIATHAN:
                 size++;
@@ -214,7 +222,7 @@ public class FishSolver extends AbstractSolver {
                 size++;
             case FINNED_FRANKEN_X_WING:
                 searchAll = false;
-                result = getAnyFish(size, lineBlockUnits, colBlockUnits, false, true, false, true);
+                result = getAnyFish(size, lineBlockUnits, colBlockUnits, false, true, false, true, FRANKEN);
                 break;
             case MUTANT_LEVIATHAN:
                 size++;
@@ -227,7 +235,7 @@ public class FishSolver extends AbstractSolver {
             case MUTANT_SWORDFISH:
                 size++;
             case MUTANT_X_WING:
-                result = getAnyFish(size, allUnits, allUnits, true, false, false, true);
+                result = getAnyFish(size, allUnits, allUnits, true, false, false, true, MUTANT);
                 break;
             case FINNED_MUTANT_LEVIATHAN:
                 size++;
@@ -240,7 +248,7 @@ public class FishSolver extends AbstractSolver {
             case FINNED_MUTANT_SWORDFISH:
                 size++;
             case FINNED_MUTANT_X_WING:
-                result = getAnyFish(size, allUnits, allUnits, false, true, false, true);
+                result = getAnyFish(size, allUnits, allUnits, false, true, false, true, MUTANT);
                 break;
             case KRAKEN_FISH:
             case KRAKEN_FISH_TYPE_1:
@@ -324,6 +332,7 @@ public class FishSolver extends AbstractSolver {
         steps = new ArrayList<SolutionStep>();
         kraken = false;
         searchAll = true;
+        fishType = UNDEFINED;
         int[][] units1 = lineUnits;
         int[][] units2 = colUnits;
         if (type == 1) {
@@ -347,6 +356,9 @@ public class FishSolver extends AbstractSolver {
             baseGesamt = 0;
             baseShowGesamt = 0;
             getFishes(i, minSize, maxSize, units1, units2, true, true, false, true);
+            if (type != 2) {
+                getFishes(i, minSize, maxSize, units2, units1, true, true, false, true);
+            }
             millis = System.currentTimeMillis() - millis;
             Logger.getLogger(getClass().getName()).log(Level.FINE, "getAllFishes(" + i + "): " + millis + "ms");
             Logger.getLogger(getClass().getName()).log(Level.FINE, steps.size() + " fishes found!");
@@ -375,20 +387,22 @@ public class FishSolver extends AbstractSolver {
     }
 
     private SolutionStep getAnyFish(int size, int[][] units1, int[][] units2, boolean withoutFins,
-            boolean withFins, boolean sashimi, boolean withEndoFins) {
+            boolean withFins, boolean sashimi, boolean withEndoFins, int fishType) {
         anzCheckBaseUnitsRecursive = 0;
         anzCheckCoverUnitsRecursive = 0;
         baseGesamt = 0;
         baseShowGesamt = 0;
         steps = new ArrayList<SolutionStep>();
         kraken = false;
+        this.fishType = fishType;
         // Templates initialisieren (für Optimierung)
         initCandTemplates();
         for (int i = 1; i <= 9; i++) {
             getFishes(i, size, size, units1, units2, withoutFins, withFins, sashimi, withEndoFins);
-            if (!searchAll && steps.size() > 0) {
-                break;
-            }
+            // CAUTION: There could be a "better" fish in the columns
+//            if (!searchAll && steps.size() > 0) {
+//                break;
+//            }
             if (units1 != allUnits && units2 != allUnits) {
                 getFishes(i, size, size, units2, units1, withoutFins, withFins, sashimi, withEndoFins);
                 if (steps.size() > 0) {
@@ -420,6 +434,7 @@ public class FishSolver extends AbstractSolver {
         steps = new ArrayList<SolutionStep>();
         kraken = true;
         searchAll = true;
+        fishType = UNDEFINED;
         int[][] units1 = lineUnits;
         int[][] units2 = colUnits;
         if (type == 1) {
@@ -445,6 +460,9 @@ public class FishSolver extends AbstractSolver {
             baseShowGesamt = 0;
             //getFishes(i, minSize, maxSize, lineUnits, colUnits, true, true, false, true);
             getFishes(i, minSize, maxSize, units1, units2, true, true, false, true);
+            if (type != 2) {
+                getFishes(i, minSize, maxSize, units2, units1, true, true, false, true);
+            }
             millis = System.currentTimeMillis() - millis;
             Logger.getLogger(getClass().getName()).log(Level.FINE, "getAllKrakenFishes(" + i + "): " + millis + "ms");
             Logger.getLogger(getClass().getName()).log(Level.FINE, steps.size() + " kraken fishes found!");
@@ -459,7 +477,7 @@ public class FishSolver extends AbstractSolver {
         Logger.getLogger(getClass().getName()).log(Level.FINER, tmpBuffer.toString());
         List<SolutionStep> result = steps;
         if (result != null) {
-            findSiameseFish(result);
+            //findSiameseFish(result);
             Collections.sort(result);
         }
         steps = oldSteps;
@@ -488,6 +506,7 @@ public class FishSolver extends AbstractSolver {
         Options.getInstance().maxFins = Options.getInstance().maxKrakenFins;
         Options.getInstance().maxEndoFins = Options.getInstance().maxKrakenEndoFins;
         kraken = true;
+        fishType = UNDEFINED;
         getTablingSolver();
         tablingSolver.setSudoku(sudoku);
         tablingSolver.initForKrakenSearch();
@@ -512,9 +531,9 @@ public class FishSolver extends AbstractSolver {
         int size = Options.getInstance().krakenMaxFishSize;
         for (int i = 1; i <= 9; i++) {
             getFishes(i, 2, size, units1, units2, false, true, true, withEndoFins);
-            if (steps.size() > 0) {
-                break;
-            }
+//            if (steps.size() > 0) {
+//                break;
+//            }
             if (units1 != allUnits && units2 != allUnits) {
                 getFishes(i, 2, size, units2, units1, false, true, true, withEndoFins);
                 if (steps.size() > 0) {
@@ -953,6 +972,18 @@ public class FishSolver extends AbstractSolver {
     }
 
     private void addFishStep() throws CloneNotSupportedException {
+        if (fishType != UNDEFINED) {
+            SolutionType type = globalStep.getType();
+            if (fishType == BASIC && ! type.isBasicFish()) {
+                return;
+            }
+            if (fishType == FRANKEN && ! type.isFrankenFish()) {
+                return;
+            }
+            if (fishType == MUTANT && ! type.isMutantFish()) {
+                return;
+            }
+        }
         if (Options.getInstance().onlyOneFishPerStep) {
             //String del = globalStep.getCandidateString() + " " + globalStep.getValues().get(0);
             String delOrg = globalStep.getCandidateString();

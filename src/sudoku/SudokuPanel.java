@@ -37,8 +37,11 @@ import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -288,34 +291,62 @@ public class SudokuPanel extends javax.swing.JPanel implements Printable {
 
         // "normale" Tastaturbehandlung
         SudokuCell cell = sudoku.getCell(aktLine, aktCol);
-        // bei keyPressed funktioniert getKeyChar() nicht zuverläsig, daher die Zahl selbst ermitteln
+        // bei keyPressed funktioniert getKeyChar() nicht zuverlässig, daher die Zahl selbst ermitteln
         int number = 0;
         switch (keyCode) {
             case KeyEvent.VK_DOWN:
                 if (aktLine < 8) {
                     aktLine++;
+                    if ((modifiers & KeyEvent.CTRL_DOWN_MASK) != 0) {
+                        while (aktLine < 8 && sudoku.getCell(aktLine, aktCol).getValue() != 0) {
+                            aktLine++;
+                        }
+                    }
                 }
                 break;
             case KeyEvent.VK_UP:
                 if (aktLine > 0) {
                     aktLine--;
+                    if ((modifiers & KeyEvent.CTRL_DOWN_MASK) != 0) {
+                        while (aktLine > 0 && sudoku.getCell(aktLine, aktCol).getValue() != 0) {
+                            aktLine--;
+                        }
+                    }
                 }
                 break;
             case KeyEvent.VK_RIGHT:
                 if (aktCol < 8) {
                     aktCol++;
+                    if ((modifiers & KeyEvent.CTRL_DOWN_MASK) != 0) {
+                        while (aktCol < 8 && sudoku.getCell(aktLine, aktCol).getValue() != 0) {
+                            aktCol++;
+                        }
+                    }
                 }
                 break;
             case KeyEvent.VK_LEFT:
                 if (aktCol > 0) {
                     aktCol--;
+                    if ((modifiers & KeyEvent.CTRL_DOWN_MASK) != 0) {
+                        while (aktCol > 0 && sudoku.getCell(aktLine, aktCol).getValue() != 0) {
+                            aktCol--;
+                        }
+                    }
                 }
                 break;
             case KeyEvent.VK_HOME:
-                aktCol = 0;
+                if ((modifiers & KeyEvent.CTRL_DOWN_MASK) != 0) {
+                    aktLine = 0;
+                } else {
+                    aktCol = 0;
+                }
                 break;
             case KeyEvent.VK_END:
-                aktCol = 8;
+                if ((modifiers & KeyEvent.CTRL_DOWN_MASK) != 0) {
+                    aktLine = 8;
+                } else {
+                    aktCol = 8;
+                }
                 break;
             case KeyEvent.VK_9:
             case KeyEvent.VK_NUMPAD9:
@@ -1506,6 +1537,20 @@ public class SudokuPanel extends javax.swing.JPanel implements Printable {
                 imageWriter.setOutput(out);
                 imageWriter.write(iioimage);
                 out.close();
+                
+                String companionFileName = file.getPath();
+                if (companionFileName.toLowerCase().endsWith(".png")) {
+                    companionFileName = companionFileName.substring(0, companionFileName.length() - 4);
+                }
+                companionFileName += ".txt";
+                PrintWriter cOut = new PrintWriter(new BufferedWriter(new FileWriter(companionFileName)));
+                cOut.println(getSudokuString(ClipboardMode.CLUES_ONLY));
+                cOut.println(getSudokuString(ClipboardMode.LIBRARY));
+                cOut.println(getSudokuString(ClipboardMode.PM_GRID));
+                if (step != null) {
+                    cOut.println(getSudokuString(ClipboardMode.PM_GRID_WITH_STEP));
+                }
+                cOut.close();;
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(this, e.getLocalizedMessage(),
                         java.util.ResourceBundle.getBundle("intl/SudokuPanel").getString("SudokuPanel.error"),

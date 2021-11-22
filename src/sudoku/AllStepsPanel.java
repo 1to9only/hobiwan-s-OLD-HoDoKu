@@ -443,64 +443,64 @@ private void krakenFishCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {
      *    der String-Knoten wird angepasst
      */
     private void adjustFishes(DefaultMutableTreeNode root) {
-        if (root.getChildCount() == 0) {
-            return;
-        }
-        
-        // zuerst die Rekursion
-        Enumeration nodes = root.children();
-        while (nodes.hasMoreElements()) {
-            DefaultMutableTreeNode nextNode = (DefaultMutableTreeNode)nodes.nextElement();
-            if (nextNode.getChildCount() > 0) {
-                adjustFishes(nextNode);
-            }
-        }
-        // wenn das erste Kind wieder ein String ist, sind wir bei root angelangt -> fertig
-        if (((DefaultMutableTreeNode)root.getChildAt(0)).getUserObject() instanceof String) {
-            return;
-        }
-        // ok, jeder Knoten enthält den kleinsten Fish -> aktuelle Ebene bereinigen
-        int typeOrdinal = -1;
-        boolean isString = false;
-        if (root.getUserObject() instanceof String) {
-            SolutionStep step = (SolutionStep)((DefaultMutableTreeNode)root.getChildAt(0)).getUserObject();
-            typeOrdinal = step.getType().ordinal();
-            isString = true;
-        } else {
-            typeOrdinal = ((SolutionStep)root.getUserObject()).getType().ordinal();
-        }
-        int index = 0;
-        int smallestIndex = -1;
-        nodes = root.children();
-        while (nodes.hasMoreElements()) {
-            DefaultMutableTreeNode nextNode = (DefaultMutableTreeNode)nodes.nextElement();
-            if (nextNode.getUserObject() instanceof String) {
-                // SubSteps, hier uninteressant
-                continue;
-            }
-            int actOrdinal = ((SolutionStep)nextNode.getUserObject()).getType().ordinal();
-            if (actOrdinal < typeOrdinal) {
-                typeOrdinal = actOrdinal;
-                smallestIndex = index;
-            }
-            index++;
-        }
-        // ok, gefunden -> wenn nötig anpassen
-        if (smallestIndex > -1) {
-            SolutionStep step = (SolutionStep)((DefaultMutableTreeNode)root.getChildAt(smallestIndex)).getUserObject();
-            if (isString) {
-                // mit dem ersten Kind tauschen
-                ((DefaultMutableTreeNode)root.getChildAt(smallestIndex)).setUserObject(
-                        ((DefaultMutableTreeNode)root.getChildAt(0)).getUserObject());
-                ((DefaultMutableTreeNode)root.getChildAt(0)).setUserObject(step);
-                // String in root anpassen
-                root.setUserObject(step.getCandidateString());
-            } else {
-                // mit root tauschen
-                ((DefaultMutableTreeNode)root.getChildAt(smallestIndex)).setUserObject(root.getUserObject());
-                root.setUserObject(step);
-            }
-        }
+//        if (root.getChildCount() == 0) {
+//            return;
+//        }
+//        
+//        // zuerst die Rekursion
+//        Enumeration nodes = root.children();
+//        while (nodes.hasMoreElements()) {
+//            DefaultMutableTreeNode nextNode = (DefaultMutableTreeNode)nodes.nextElement();
+//            if (nextNode.getChildCount() > 0) {
+//                adjustFishes(nextNode);
+//            }
+//        }
+//        // wenn das erste Kind wieder ein String ist, sind wir bei root angelangt -> fertig
+//        if (((DefaultMutableTreeNode)root.getChildAt(0)).getUserObject() instanceof String) {
+//            return;
+//        }
+//        // ok, jeder Knoten enthält den kleinsten Fish -> aktuelle Ebene bereinigen
+//        int typeOrdinal = -1;
+//        boolean isString = false;
+//        if (root.getUserObject() instanceof String) {
+//            SolutionStep step = (SolutionStep)((DefaultMutableTreeNode)root.getChildAt(0)).getUserObject();
+//            typeOrdinal = step.getType().ordinal();
+//            isString = true;
+//        } else {
+//            typeOrdinal = ((SolutionStep)root.getUserObject()).getType().ordinal();
+//        }
+//        int index = 0;
+//        int smallestIndex = -1;
+//        nodes = root.children();
+//        while (nodes.hasMoreElements()) {
+//            DefaultMutableTreeNode nextNode = (DefaultMutableTreeNode)nodes.nextElement();
+//            if (nextNode.getUserObject() instanceof String) {
+//                // SubSteps, hier uninteressant
+//                continue;
+//            }
+//            int actOrdinal = ((SolutionStep)nextNode.getUserObject()).getType().ordinal();
+//            if (actOrdinal < typeOrdinal) {
+//                typeOrdinal = actOrdinal;
+//                smallestIndex = index;
+//            }
+//            index++;
+//        }
+//        // ok, gefunden -> wenn nötig anpassen
+//        if (smallestIndex > -1) {
+//            SolutionStep step = (SolutionStep)((DefaultMutableTreeNode)root.getChildAt(smallestIndex)).getUserObject();
+//            if (isString) {
+//                // mit dem ersten Kind tauschen
+//                ((DefaultMutableTreeNode)root.getChildAt(smallestIndex)).setUserObject(
+//                        ((DefaultMutableTreeNode)root.getChildAt(0)).getUserObject());
+//                ((DefaultMutableTreeNode)root.getChildAt(0)).setUserObject(step);
+//                // String in root anpassen
+//                root.setUserObject(step.getCandidateString());
+//            } else {
+//                // mit root tauschen
+//                ((DefaultMutableTreeNode)root.getChildAt(smallestIndex)).setUserObject(root.getUserObject());
+//                root.setUserObject(step);
+//            }
+//        }
     }
     
     /**

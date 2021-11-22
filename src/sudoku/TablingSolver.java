@@ -346,7 +346,9 @@ public class TablingSolver extends AbstractSolver {
         // search for everything
         fillTables();
         fillTablesWithGroupNodes();
-        fillTablesWithAls();
+        if (Options.getInstance().allowAlsInTablingChains) {
+            fillTablesWithAls();
+        }
         ticks = System.currentTimeMillis() - ticks;
         if (DEBUG) System.out.println("fillTables(): " + ticks + "ms");
         printTableAnz();

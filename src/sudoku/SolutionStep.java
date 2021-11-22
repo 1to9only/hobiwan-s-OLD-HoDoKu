@@ -1722,6 +1722,10 @@ public class SolutionStep implements Comparable<SolutionStep>, Cloneable {
         return false;
     }
 
+    public int compareChainLengths(SolutionStep o) {
+        return getChainLength() - o.getChainLength();
+    }
+    
     /**
      * Sortierreihenfolge:
      *
@@ -1756,6 +1760,50 @@ public class SolutionStep implements Comparable<SolutionStep>, Cloneable {
             return sum1 == sum2 ? 1 : sum1 - sum2;
         }
 
+        // SPECIAL STEPS
+        // fish general: sort for
+        //  - fish type
+        //  - fish size
+        //  - cannibalism
+        //  - number of endo fins
+        //  - number of fins
+        if (type.isFish() && o.getType().isFish()) {
+            int ret = type.compare(o.getType());
+            if (ret != 0) {
+                // different type or different size
+                return ret;
+            }
+            ret = getCannibalistic().size() - o.getCannibalistic().size();
+            if (ret != 0) {
+                return ret;
+            }
+            ret = getEndoFins().size() - o.getEndoFins().size();
+            if (ret != 0) {
+                return ret;
+            }
+            ret = getFins().size() - o.getFins().size();
+            if (ret != 0) {
+                return ret;
+            }
+            if (!isEqualInteger(values, o.values)) {
+                sum1 = getSumme(values);
+                sum2 = getSumme(o.values);
+                return sum1 == sum2 ? 1 : sum1 - sum2;
+            }
+            return 0;
+        }
+        
+        // kraken fish: sort for (fish type, chain length)
+        if (type.isKrakenFish() && o.getType().isKrakenFish()) {
+        //if (type == SolutionType.KRAKEN_FISH && o.getType() == SolutionType.KRAKEN_FISH) {
+            int ret = subType.compare(o.getSubType());
+            if (ret != 0) {
+                return ret;
+            }
+            return compareChainLengths(o);
+        }
+
+        // GENERAL STEPS
         // jetzt nach betroffenen Kandidaten
         // wenn alle betroffenen Kandidaten gleich sind, sind die Steps gleich, sonst
         // zählt die Summe
@@ -1765,30 +1813,10 @@ public class SolutionStep implements Comparable<SolutionStep>, Cloneable {
             return sum1 == sum2 ? 1 : sum1 - sum2;
         }
 
-        // kraken fish: sort for (fish type, chain length)
-        if (type == SolutionType.KRAKEN_FISH && o.getType() == SolutionType.KRAKEN_FISH) {
-            int ret = subType.compare(o.getSubType());
-            if (ret != 0) {
-                return ret;
-            }
-        }
-
         // Neu: Chains - nach Länge der Chains (gesamt)
-        if (getChains().size() > 0) {
-            int length1 = 0;
-            for (Chain chain : chains) {
-                //length1 += chain.end - chain.start;
-                length1 += chain.getLength(alses);
-            }
-            int length2 = 0;
-            for (Chain chain : o.chains) {
-                //length2 += chain.end - chain.start;
-                length2 += chain.getLength(alses);
-            }
-            // absteigend sortiert!
-            if (length1 - length2 != 0) {
-                return length1 - length2;
-            }
+        int chainDiff  = compareChainLengths(o);
+        if (chainDiff != 0) {
+            return chainDiff;
         }
 
         // Neuer Versuch: Nach Kandidaten, Fins und Typ

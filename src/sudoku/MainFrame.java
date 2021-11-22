@@ -71,7 +71,7 @@ import javax.swing.filechooser.FileFilter;
  */
 public class MainFrame extends javax.swing.JFrame implements FlavorListener {
 
-    public static final String VERSION = "HoDoKu - v1.2";
+    public static final String VERSION = "HoDoKu - v1.2.4";
     private SudokuPanel sudokuPanel;
     private DifficultyLevel level = Options.getInstance().getDifficultyLevels()[DifficultyType.EASY.ordinal()];
     private Cursor[] numberCursors = new Cursor[10];

@@ -184,31 +184,41 @@ public enum SolutionType {
             case X_WING:
             case FINNED_X_WING:
             case SASHIMI_X_WING:
+            case FRANKEN_X_WING:
             case FINNED_FRANKEN_X_WING:
+            case MUTANT_X_WING:
             case FINNED_MUTANT_X_WING:
                 return 2;
             case SWORDFISH:
             case FINNED_SWORDFISH:
             case SASHIMI_SWORDFISH:
+            case FRANKEN_SWORDFISH:
             case FINNED_FRANKEN_SWORDFISH:
+            case MUTANT_SWORDFISH:
             case FINNED_MUTANT_SWORDFISH:
                 return 3;
             case JELLYFISH:
             case FINNED_JELLYFISH:
             case SASHIMI_JELLYFISH:
+            case FRANKEN_JELLYFISH:
             case FINNED_FRANKEN_JELLYFISH:
+            case MUTANT_JELLYFISH:
             case FINNED_MUTANT_JELLYFISH:
                 return 4;
             case SQUIRMBAG:
             case FINNED_SQUIRMBAG:
             case SASHIMI_SQUIRMBAG:
+            case FRANKEN_SQUIRMBAG:
             case FINNED_FRANKEN_SQUIRMBAG:
+            case MUTANT_SQUIRMBAG:
             case FINNED_MUTANT_SQUIRMBAG:
                 return 5;
             case WHALE:
             case FINNED_WHALE:
             case SASHIMI_WHALE:
+            case FRANKEN_WHALE:
             case FINNED_FRANKEN_WHALE:
+            case MUTANT_WHALE:
             case FINNED_MUTANT_WHALE:
                 return 6;
             default:
@@ -297,10 +307,10 @@ public enum SolutionType {
         if (config != null) {
             if (config.getCategory() == SolutionCategory.BASIC_FISH ||
                     config.getCategory() == SolutionCategory.FINNED_BASIC_FISH ||
-                    config.getCategory() == SolutionCategory.FINNED_FRANKEN_FISH ||
-                    config.getCategory() == SolutionCategory.FINNED_MUTANT_FISH ||
                     config.getCategory() == SolutionCategory.FRANKEN_FISH ||
-                    config.getCategory() == SolutionCategory.MUTANT_FISH) {
+                    config.getCategory() == SolutionCategory.FINNED_FRANKEN_FISH ||
+                    config.getCategory() == SolutionCategory.MUTANT_FISH ||
+                    config.getCategory() == SolutionCategory.FINNED_MUTANT_FISH) {
                 return true;
             } else {
                 return false;
@@ -311,6 +321,57 @@ public enum SolutionType {
 
     public boolean isFish() {
         return isFish(this);
+    }
+    
+    public static boolean isBasicFish(SolutionType type) {
+        StepConfig config = getStepConfig(type);
+        if (config != null) {
+            if (config.getCategory() == SolutionCategory.BASIC_FISH ||
+                    config.getCategory() == SolutionCategory.FINNED_BASIC_FISH) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    
+    public boolean isBasicFish() {
+        return isBasicFish(this);
+    }
+    
+    public static boolean isFrankenFish(SolutionType type) {
+        StepConfig config = getStepConfig(type);
+        if (config != null) {
+            if (config.getCategory() == SolutionCategory.FRANKEN_FISH ||
+                    config.getCategory() == SolutionCategory.FINNED_FRANKEN_FISH) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    
+    public boolean isFrankenFish() {
+        return isFrankenFish(this);
+    }
+    
+    public static boolean isMutantFish(SolutionType type) {
+        StepConfig config = getStepConfig(type);
+        if (config != null) {
+            if (config.getCategory() == SolutionCategory.MUTANT_FISH ||
+                    config.getCategory() == SolutionCategory.FINNED_MUTANT_FISH) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
+    
+    public boolean isMutantFish() {
+        return isMutantFish(this);
     }
     
     public static boolean isKrakenFish(SolutionType type) {
